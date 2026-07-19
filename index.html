@@ -92,6 +92,28 @@
     font-size:14px;
     margin:0 0 24px;
   }
+  .countdown{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    background:rgba(0,102,255,0.12);
+    border:1px solid var(--blue);
+    border-radius:12px;
+    padding:12px 16px;
+    margin-bottom:20px;
+  }
+  .countdown #countdownNumber{
+    font-family:'Anton',sans-serif;
+    font-size:30px;
+    color:var(--blue);
+    line-height:1;
+  }
+  .countdown #countdownLabel{
+    font-size:12px;
+    letter-spacing:0.5px;
+    color:rgba(255,255,255,0.75);
+    text-transform:uppercase;
+  }
   .meta-row{
     display:flex;
     justify-content:space-between;
@@ -171,17 +193,6 @@
   canvas#ticketCanvas{width:100%; border-radius:14px; display:block;}
   .ticket-actions{display:flex; gap:10px; margin-top:18px;}
   .ticket-actions .btn{margin-top:0;}
-  .admin-toggle{
-    text-align:center;
-    margin-top:26px;
-    font-size:12px;
-    color:rgba(255,255,255,0.6);
-    cursor:pointer;
-    text-decoration:underline;
-  }
-  #adminPanel{display:none; margin-top:16px;}
-  #adminPanel table{width:100%; border-collapse:collapse; font-size:12px;}
-  #adminPanel th, #adminPanel td{border-bottom:1px solid rgba(255,255,255,0.15); padding:6px 4px; text-align:left;}
   .error-text{color:#ff6b6b; font-size:12px; margin-top:6px; display:none;}
 </style>
 </head>
@@ -204,6 +215,9 @@
   <div class="card" id="step1">
     <h1 class="title">BRAND<br>LAUNCH<br>DINNER</h1>
     <p class="subtitle">Abraham Akinbote · CEO / Founder</p>
+    <div class="countdown" id="countdownBanner">
+      <span id="countdownNumber">--</span> <span id="countdownLabel">DAYS LEFT TO REGISTER</span>
+    </div>
     <div class="meta-row">
       <div>Date<br><b>16TH AUG 2026</b></div>
       <div style="text-align:right">Time<br><b>1:30 PM</b></div>
@@ -232,12 +246,6 @@
 
     <div id="testBanner" class="test-banner" style="display:none;">
       Test mode: no live Paystack key has been added yet, so payment is simulated. Add your Paystack public key in the CONFIG section of this file to accept real payments.
-    </div>
-
-    <div class="field">
-      <label>Email address (for your receipt)</label>
-      <input type="email" id="payerEmail" placeholder="you@email.com">
-      <div class="error-text" id="emailError">Please enter a valid email address.</div>
     </div>
 
     <div class="meta-row">
@@ -281,16 +289,6 @@
     </div>
   </div>
 
-  <div class="admin-toggle" onclick="toggleAdmin()">Event organizer? View guest list</div>
-  <div id="adminPanel" class="card">
-    <p class="subtitle" style="margin-bottom:10px;">Registrations recorded from this page (photos are not stored here for privacy — only name, ticket type and email).</p>
-    <table id="adminTable">
-      <thead><tr><th>Name</th><th>Ticket</th><th>Email</th><th>Time</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <button class="btn secondary" onclick="loadAdmin()">Refresh list</button>
-  </div>
-
 </div>
 
 <script>
@@ -301,6 +299,7 @@ const CONFIG = {
   paystackPublicKey: 'pk_test_REPLACE_WITH_YOUR_KEY',
   eventDate: '16TH AUG 2026',
   eventTime: '1:30 PM',
+  countdownTarget: '2026-08-05T00:00:00', // 5th Aug 2026
   hostName: 'Abraham Akinbote',
   currency: 'NGN',
   tickets: {
@@ -349,37 +348,28 @@ function goToPayment(){
   goToStep(2);
 }
 
-function isValidEmail(email){
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 function startPayment(){
-  const email = document.getElementById('payerEmail').value.trim();
-  const emailErr = document.getElementById('emailError');
-  if(!isValidEmail(email)){
-    emailErr.style.display = 'block';
-    return;
-  }
-  emailErr.style.display = 'none';
-
   const t = CONFIG.tickets[selectedTicket];
   currentRef = 'BLD-' + Date.now().toString(36).toUpperCase();
+  // Paystack requires an email on the transaction even though we don't collect one from the guest here;
+  // this placeholder is only used for the payment record, not shown to the guest.
+  const placeholderEmail = 'guest+' + currentRef.toLowerCase() + '@brandwithab.com';
   const isTestMode = CONFIG.paystackPublicKey.includes('REPLACE_WITH_YOUR_KEY');
 
   if(isTestMode){
     // Simulated success so the flow can be tested before a real key is added.
-    setTimeout(()=>{ onPaymentSuccess(email); }, 500);
+    setTimeout(()=>{ onPaymentSuccess(); }, 500);
     return;
   }
 
   const handler = PaystackPop.setup({
     key: CONFIG.paystackPublicKey,
-    email: email,
+    email: placeholderEmail,
     amount: t.price * 100, // kobo
     currency: CONFIG.currency,
     ref: currentRef,
     callback: function(response){
-      onPaymentSuccess(email);
+      onPaymentSuccess();
     },
     onClose: function(){
       // user closed the payment popup without paying
@@ -388,8 +378,7 @@ function startPayment(){
   handler.openIframe();
 }
 
-function onPaymentSuccess(email){
-  window._payerEmail = email;
+function onPaymentSuccess(){
   goToStep(3);
 }
 
@@ -418,18 +407,7 @@ async function generateTicket(){
 
   currentGuestName = name;
   await drawTicket(name, uploadedPhotoDataUrl, selectedTicket);
-  await recordAttendee(name, selectedTicket, window._payerEmail || '');
   goToStep(4);
-}
-
-async function recordAttendee(name, ticketType, email){
-  try{
-    await window.storage.set('attendees:'+currentRef, JSON.stringify({
-      name, ticketType, email, ref: currentRef, timestamp: new Date().toISOString()
-    }), true);
-  }catch(err){
-    console.error('Could not save attendee record', err);
-  }
 }
 
 function loadImage(src){
@@ -606,41 +584,23 @@ function downloadTicket(){
   link.click();
 }
 
-function toggleAdmin(){
-  const panel = document.getElementById('adminPanel');
-  const showing = panel.style.display === 'block';
-  panel.style.display = showing ? 'none' : 'block';
-  if(!showing) loadAdmin();
-}
-
-async function loadAdmin(){
-  const tbody = document.querySelector('#adminTable tbody');
-  tbody.innerHTML = '<tr><td colspan="4">Loading…</td></tr>';
-  try{
-    const list = await window.storage.list('attendees:', true);
-    if(!list || !list.keys || list.keys.length === 0){
-      tbody.innerHTML = '<tr><td colspan="4">No registrations yet.</td></tr>';
-      return;
-    }
-    const rows = [];
-    for(const key of list.keys){
-      try{
-        const res = await window.storage.get(key, true);
-        if(res && res.value){
-          const d = JSON.parse(res.value);
-          rows.push(d);
-        }
-      }catch(e){}
-    }
-    rows.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
-    tbody.innerHTML = rows.map(r=>
-      '<tr><td>'+r.name+'</td><td>'+(CONFIG.tickets[r.ticketType]?CONFIG.tickets[r.ticketType].label:r.ticketType)+'</td><td>'+r.email+'</td><td>'+new Date(r.timestamp).toLocaleString()+'</td></tr>'
-    ).join('') || '<tr><td colspan="4">No registrations yet.</td></tr>';
-  }catch(err){
-    tbody.innerHTML = '<tr><td colspan="4">Could not load guest list.</td></tr>';
+function updateCountdown(){
+  const target = new Date(CONFIG.countdownTarget);
+  const now = new Date();
+  const msLeft = target - now;
+  const numberEl = document.getElementById('countdownNumber');
+  const labelEl = document.getElementById('countdownLabel');
+  if(msLeft <= 0){
+    numberEl.textContent = '0';
+    labelEl.textContent = 'DAYS LEFT TO REGISTER';
+    return;
   }
+  const daysLeft = Math.ceil(msLeft / (1000*60*60*24));
+  numberEl.textContent = daysLeft;
+  labelEl.textContent = daysLeft === 1 ? 'DAY LEFT TO REGISTER' : 'DAYS LEFT TO REGISTER';
 }
 
+updateCountdown();
 updateStepPills(1);
 </script>
 </body>
