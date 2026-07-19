@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Launch Dinner — Get Your Ticket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+  :root{
+    --charcoal:#2B2B2B;
+    --charcoal-2:#1a1a1a;
+    --blue:#0066FF;
+    --blue-dim: rgba(0,102,255,0.35);
+    --white:#ffffff;
+    --grey:#9a9a9a;
+    --card-radius:20px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--blue);
+    font-family:'Inter',sans-serif;
+    color:var(--white);
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .app{
+    width:100%;
+    max-width:560px;
+  }
+  .eyebrow-row{
+    display:flex;
+    overflow:hidden;
+    white-space:nowrap;
+    font-family:'Anton',sans-serif;
+    font-size:13px;
+    letter-spacing:2px;
+    color:rgba(255,255,255,0.75);
+    border-bottom:2px solid rgba(255,255,255,0.35);
+    padding-bottom:10px;
+    margin-bottom:22px;
+    gap:18px;
+  }
+  .eyebrow-row span{flex:none;}
+  .steps{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:24px;
+    gap:6px;
+  }
+  .step-pill{
+    flex:1;
+    text-align:center;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    padding:8px 4px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.6);
+    text-transform:uppercase;
+  }
+  .step-pill.active{
+    background:var(--white);
+    color:var(--blue);
+  }
+  .step-pill.done{
+    background:rgba(255,255,255,0.35);
+    color:var(--white);
+  }
+  .card{
+    background:var(--charcoal);
+    border:2px solid rgba(255,255,255,0.25);
+    border-radius:var(--card-radius);
+    padding:28px 24px;
+  }
+  h1.title{
+    font-family:'Anton',sans-serif;
+    font-size:44px;
+    line-height:0.95;
+    letter-spacing:0.5px;
+    margin:0 0 6px;
+  }
+  .subtitle{
+    color:var(--grey);
+    font-size:14px;
+    margin:0 0 24px;
+  }
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--grey);
+    margin-bottom:22px;
+    border-top:1px solid rgba(255,255,255,0.15);
+    border-bottom:1px solid rgba(255,255,255,0.15);
+    padding:12px 0;
+  }
+  .meta-row b{color:var(--white); display:block; font-size:15px; margin-top:2px;}
+  .ticket-options{display:flex; flex-direction:column; gap:14px;}
+  .ticket-option{
+    border:2px solid rgba(255,255,255,0.2);
+    border-radius:14px;
+    padding:18px;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+    position:relative;
+  }
+  .ticket-option:hover{border-color:var(--blue);}
+  .ticket-option.selected{border-color:var(--blue); background:rgba(0,102,255,0.08);}
+  .ticket-option .t-label{font-size:12px; letter-spacing:1px; color:var(--grey); text-transform:uppercase;}
+  .ticket-option .t-price{font-family:'Anton',sans-serif; font-size:38px; color:var(--white); margin:4px 0;}
+  .ticket-option.premium .t-price{color:var(--blue);}
+  .ticket-option .t-perks{font-size:13px; color:var(--grey);}
+  .btn{
+    width:100%;
+    padding:16px;
+    border-radius:12px;
+    border:none;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    background:var(--blue);
+    color:var(--white);
+    margin-top:22px;
+    transition:opacity .15s ease;
+  }
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn.secondary{background:transparent; border:2px solid rgba(255,255,255,0.3); color:var(--white); margin-top:10px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--grey); margin-bottom:6px;}
+  .field input[type=text], .field input[type=email], .field input[type=tel]{
+    width:100%;
+    padding:13px 14px;
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,0.2);
+    background:var(--charcoal-2);
+    color:var(--white);
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+  }
+  .field input:focus{outline:none; border-color:var(--blue);}
+  .photo-upload{
+    border:2px dashed rgba(255,255,255,0.3);
+    border-radius:14px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    position:relative;
+  }
+  .photo-upload img{width:110px; height:110px; object-fit:cover; border-radius:50%; border:3px solid var(--blue);}
+  .photo-upload input{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .photo-upload p{margin:0; font-size:13px; color:var(--grey);}
+  .test-banner{
+    background:#3a2c00;
+    border:1px solid #ffb800;
+    color:#ffcf4d;
+    font-size:12px;
+    padding:10px 12px;
+    border-radius:10px;
+    margin-bottom:18px;
+    line-height:1.5;
+  }
+  canvas#ticketCanvas{width:100%; border-radius:14px; display:block;}
+  .ticket-actions{display:flex; gap:10px; margin-top:18px;}
+  .ticket-actions .btn{margin-top:0;}
+  .admin-toggle{
+    text-align:center;
+    margin-top:26px;
+    font-size:12px;
+    color:rgba(255,255,255,0.6);
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  #adminPanel{display:none; margin-top:16px;}
+  #adminPanel table{width:100%; border-collapse:collapse; font-size:12px;}
+  #adminPanel th, #adminPanel td{border-bottom:1px solid rgba(255,255,255,0.15); padding:6px 4px; text-align:left;}
+  .error-text{color:#ff6b6b; font-size:12px; margin-top:6px; display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="eyebrow-row" id="marquee">
+    <span>BRAND LAUNCH DINNER</span><span>★</span><span>BIRTHDAY WORSHIP EVENT</span><span>★</span>
+    <span>BRAND LAUNCH DINNER</span><span>★</span><span>BIRTHDAY WORSHIP EVENT</span><span>★</span>
+  </div>
+
+  <div class="steps">
+    <div class="step-pill" data-step="1">1. Ticket</div>
+    <div class="step-pill" data-step="2">2. Payment</div>
+    <div class="step-pill" data-step="3">3. Your Info</div>
+    <div class="step-pill" data-step="4">4. Ticket</div>
+  </div>
+
+  <!-- STEP 1: TICKET SELECTION -->
+  <div class="card" id="step1">
+    <h1 class="title">BRAND<br>LAUNCH<br>DINNER</h1>
+    <p class="subtitle">Abraham Akinbote · CEO / Founder</p>
+    <div class="meta-row">
+      <div>Date<br><b>16TH AUG 2026</b></div>
+      <div style="text-align:right">Time<br><b>1:30 PM</b></div>
+    </div>
+
+    <div class="ticket-options">
+      <div class="ticket-option basic" data-type="basic" onclick="selectTicket('basic')">
+        <div class="t-label">Basic Ticket</div>
+        <div class="t-price">₦5,000</div>
+        <div class="t-perks">Food, drinks &amp; snacks</div>
+      </div>
+      <div class="ticket-option premium" data-type="premium" onclick="selectTicket('premium')">
+        <div class="t-label">Premium Ticket</div>
+        <div class="t-price">₦15,000</div>
+        <div class="t-perks">Brand T-shirt, food, drinks &amp; snacks</div>
+      </div>
+    </div>
+
+    <button class="btn" id="continueBtn" disabled onclick="goToPayment()">Continue to payment</button>
+  </div>
+
+  <!-- STEP 2: PAYMENT -->
+  <div class="card" id="step2" style="display:none;">
+    <h1 class="title" style="font-size:32px;">PAYMENT</h1>
+    <p class="subtitle">You're getting the <b id="payTicketName" style="color:#fff;"></b></p>
+
+    <div id="testBanner" class="test-banner" style="display:none;">
+      Test mode: no live Paystack key has been added yet, so payment is simulated. Add your Paystack public key in the CONFIG section of this file to accept real payments.
+    </div>
+
+    <div class="field">
+      <label>Email address (for your receipt)</label>
+      <input type="email" id="payerEmail" placeholder="you@email.com">
+      <div class="error-text" id="emailError">Please enter a valid email address.</div>
+    </div>
+
+    <div class="meta-row">
+      <div>Amount due<br><b id="payAmount">₦0</b></div>
+    </div>
+
+    <button class="btn" id="payBtn" onclick="startPayment()">Pay now</button>
+    <button class="btn secondary" onclick="goToStep(1)">Back</button>
+  </div>
+
+  <!-- STEP 3: GUEST INFO -->
+  <div class="card" id="step3" style="display:none;">
+    <h1 class="title" style="font-size:32px;">YOUR INFO</h1>
+    <p class="subtitle">Payment confirmed. Fill this in to generate your ticket.</p>
+
+    <div class="field">
+      <label>Full name (as it should appear on your ticket)</label>
+      <input type="text" id="guestName" placeholder="e.g. Tosin Adebayo">
+      <div class="error-text" id="nameError">Please enter your name.</div>
+    </div>
+
+    <div class="field">
+      <label>Your photo</label>
+      <div class="photo-upload" id="photoUploadBox">
+        <p id="photoPlaceholderText">Tap to upload a photo</p>
+        <input type="file" accept="image/*" id="photoInput" onchange="handlePhotoUpload(event)">
+      </div>
+      <div class="error-text" id="photoError">Please upload a photo.</div>
+    </div>
+
+    <button class="btn" onclick="generateTicket()">Generate my ticket</button>
+  </div>
+
+  <!-- STEP 4: TICKET RESULT -->
+  <div class="card" id="step4" style="display:none;">
+    <h1 class="title" style="font-size:32px;">YOUR TICKET</h1>
+    <p class="subtitle">Save it now — you'll show this at the door.</p>
+    <canvas id="ticketCanvas" width="1080" height="1500"></canvas>
+    <div class="ticket-actions">
+      <button class="btn" onclick="downloadTicket()">Download JPEG</button>
+    </div>
+  </div>
+
+  <div class="admin-toggle" onclick="toggleAdmin()">Event organizer? View guest list</div>
+  <div id="adminPanel" class="card">
+    <p class="subtitle" style="margin-bottom:10px;">Registrations recorded from this page (photos are not stored here for privacy — only name, ticket type and email).</p>
+    <table id="adminTable">
+      <thead><tr><th>Name</th><th>Ticket</th><th>Email</th><th>Time</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button class="btn secondary" onclick="loadAdmin()">Refresh list</button>
+  </div>
+
+</div>
+
+<script>
+/* ============ CONFIG — edit these before going live ============ */
+const CONFIG = {
+  // Replace with your real Paystack PUBLIC key (starts with pk_live_ or pk_test_).
+  // Until you do, the page runs in simulated test mode so you can try the full flow.
+  paystackPublicKey: 'pk_test_REPLACE_WITH_YOUR_KEY',
+  eventDate: '16TH AUG 2026',
+  eventTime: '1:30 PM',
+  hostName: 'Abraham Akinbote',
+  currency: 'NGN',
+  tickets: {
+    basic:   { label: 'Basic Ticket',   price: 5000,  perks: 'Food, Drinks & Snacks' },
+    premium: { label: 'Premium Ticket', price: 15000, perks: 'Brand T-shirt, Food, Drinks & Snacks' }
+  }
+};
+/* ================================================================= */
+
+let selectedTicket = null;
+let uploadedPhotoDataUrl = null;
+let currentGuestName = '';
+let currentRef = '';
+
+function updateStepPills(active){
+  document.querySelectorAll('.step-pill').forEach(el=>{
+    const n = parseInt(el.dataset.step,10);
+    el.classList.remove('active','done');
+    if(n < active) el.classList.add('done');
+    if(n === active) el.classList.add('active');
+  });
+}
+
+function goToStep(n){
+  ['step1','step2','step3','step4'].forEach((id,i)=>{
+    document.getElementById(id).style.display = (i+1===n)?'block':'none';
+  });
+  updateStepPills(n);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function selectTicket(type){
+  selectedTicket = type;
+  document.querySelectorAll('.ticket-option').forEach(el=>el.classList.remove('selected'));
+  document.querySelector('.ticket-option[data-type="'+type+'"]').classList.add('selected');
+  document.getElementById('continueBtn').disabled = false;
+}
+
+function goToPayment(){
+  if(!selectedTicket) return;
+  const t = CONFIG.tickets[selectedTicket];
+  document.getElementById('payTicketName').textContent = t.label;
+  document.getElementById('payAmount').textContent = '₦' + t.price.toLocaleString();
+  const isTestMode = CONFIG.paystackPublicKey.includes('REPLACE_WITH_YOUR_KEY');
+  document.getElementById('testBanner').style.display = isTestMode ? 'block' : 'none';
+  goToStep(2);
+}
+
+function isValidEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function startPayment(){
+  const email = document.getElementById('payerEmail').value.trim();
+  const emailErr = document.getElementById('emailError');
+  if(!isValidEmail(email)){
+    emailErr.style.display = 'block';
+    return;
+  }
+  emailErr.style.display = 'none';
+
+  const t = CONFIG.tickets[selectedTicket];
+  currentRef = 'BLD-' + Date.now().toString(36).toUpperCase();
+  const isTestMode = CONFIG.paystackPublicKey.includes('REPLACE_WITH_YOUR_KEY');
+
+  if(isTestMode){
+    // Simulated success so the flow can be tested before a real key is added.
+    setTimeout(()=>{ onPaymentSuccess(email); }, 500);
+    return;
+  }
+
+  const handler = PaystackPop.setup({
+    key: CONFIG.paystackPublicKey,
+    email: email,
+    amount: t.price * 100, // kobo
+    currency: CONFIG.currency,
+    ref: currentRef,
+    callback: function(response){
+      onPaymentSuccess(email);
+    },
+    onClose: function(){
+      // user closed the payment popup without paying
+    }
+  });
+  handler.openIframe();
+}
+
+function onPaymentSuccess(email){
+  window._payerEmail = email;
+  goToStep(3);
+}
+
+function handlePhotoUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    uploadedPhotoDataUrl = e.target.result;
+    const box = document.getElementById('photoUploadBox');
+    box.innerHTML = '<img src="'+uploadedPhotoDataUrl+'" alt="preview">' +
+      '<input type="file" accept="image/*" id="photoInput" onchange="handlePhotoUpload(event)">';
+    document.getElementById('photoError').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function generateTicket(){
+  const name = document.getElementById('guestName').value.trim();
+  const nameErr = document.getElementById('nameError');
+  const photoErr = document.getElementById('photoError');
+  let ok = true;
+  if(!name){ nameErr.style.display='block'; ok=false; } else nameErr.style.display='none';
+  if(!uploadedPhotoDataUrl){ photoErr.style.display='block'; ok=false; } else photoErr.style.display='none';
+  if(!ok) return;
+
+  currentGuestName = name;
+  await drawTicket(name, uploadedPhotoDataUrl, selectedTicket);
+  await recordAttendee(name, selectedTicket, window._payerEmail || '');
+  goToStep(4);
+}
+
+async function recordAttendee(name, ticketType, email){
+  try{
+    await window.storage.set('attendees:'+currentRef, JSON.stringify({
+      name, ticketType, email, ref: currentRef, timestamp: new Date().toISOString()
+    }), true);
+  }catch(err){
+    console.error('Could not save attendee record', err);
+  }
+}
+
+function loadImage(src){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+async function drawTicket(name, photoSrc, ticketType){
+  const canvas = document.getElementById('ticketCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const BLUE = '#0066FF';
+  const CHARCOAL = '#141414';
+
+  // Background
+  ctx.fillStyle = BLUE;
+  ctx.fillRect(0,0,W,H);
+
+  // Top + bottom marquee text
+  ctx.font = "700 26px Anton, sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.textBaseline = 'middle';
+  const marqueeTop = 'BRAND LAUNCH DINNER   ★   BIRTHDAY WORSHIP EVENT   ★   ';
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0,0,W,90); ctx.clip();
+  let tx = 20;
+  while(tx < W+400){
+    ctx.fillText(marqueeTop, tx, 50);
+    tx += ctx.measureText(marqueeTop).width;
+  }
+  ctx.restore();
+
+  // Card
+  const cardX = 50, cardY = 130, cardW = W-100, cardH = H-230;
+  ctx.fillStyle = CHARCOAL;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+  ctx.fill();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(120,170,255,0.7)';
+  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+  ctx.stroke();
+
+  // Confetti
+  const confettiColors = ['#2ecc71','#e74c3c','#f1c40f','#3498db','#ffffff'];
+  for(let i=0;i<26;i++){
+    ctx.fillStyle = confettiColors[i % confettiColors.length];
+    const cx = cardX + 30 + Math.random()*(cardW-60);
+    const cy = cardY + 20 + Math.random()*70;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(Math.random()*Math.PI);
+    ctx.fillRect(-5,-2,10,4);
+    ctx.restore();
+  }
+
+  // Title
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = "700 54px Anton, sans-serif";
+  ctx.fillText('BRAND LAUNCH DINNER', W/2, cardY+150);
+
+  // Photo (circular)
+  const photoR = 170;
+  const photoCX = W/2, photoCY = cardY+380;
+  try{
+    const img = await loadImage(photoSrc);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(photoCX, photoCY, photoR, 0, Math.PI*2);
+    ctx.closePath();
+    ctx.clip();
+    // cover-fit
+    const scale = Math.max((photoR*2)/img.width, (photoR*2)/img.height);
+    const iw = img.width*scale, ih = img.height*scale;
+    ctx.drawImage(img, photoCX-iw/2, photoCY-ih/2, iw, ih);
+    ctx.restore();
+  }catch(e){}
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = BLUE;
+  ctx.beginPath();
+  ctx.arc(photoCX, photoCY, photoR+4, 0, Math.PI*2);
+  ctx.stroke();
+
+  // Name
+  ctx.fillStyle = '#ffffff';
+  ctx.font = "700 48px Inter, sans-serif";
+  ctx.fillText(name.toUpperCase(), W/2, photoCY + photoR + 80);
+
+  // Ticket type badge
+  const t = CONFIG.tickets[ticketType];
+  const badgeText = t.label.toUpperCase();
+  ctx.font = "700 24px Inter, sans-serif";
+  const badgeW = ctx.measureText(badgeText).width + 60;
+  const badgeY = photoCY + photoR + 120;
+  ctx.fillStyle = ticketType === 'premium' ? BLUE : 'rgba(255,255,255,0.15)';
+  roundRect(ctx, W/2-badgeW/2, badgeY, badgeW, 54, 27);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(badgeText, W/2, badgeY+27);
+
+  // Perforation line + notches
+  const perfY = badgeY + 110;
+  ctx.setLineDash([12,10]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cardX+40, perfY);
+  ctx.lineTo(cardX+cardW-40, perfY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = BLUE;
+  ctx.beginPath(); ctx.arc(cardX, perfY, 26, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cardX+cardW, perfY, 26, 0, Math.PI*2); ctx.fill();
+
+  // Stub row: date / time
+  ctx.textAlign = 'left';
+  ctx.font = "700 20px Inter, sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('DATE', cardX+50, perfY+55);
+  ctx.fillText('TIME', cardX+cardW-190, perfY+55);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = "700 30px Inter, sans-serif";
+  ctx.fillText(CONFIG.eventDate, cardX+50, perfY+90);
+  ctx.fillText(CONFIG.eventTime, cardX+cardW-190, perfY+90);
+
+  // Barcode
+  const barY = perfY + 140;
+  let bx = cardX + 50;
+  const barEndX = cardX + cardW - 50;
+  ctx.fillStyle = '#ffffff';
+  while(bx < barEndX){
+    const bw = 2 + Math.random()*5;
+    ctx.fillRect(bx, barY, bw, 60);
+    bx += bw + (2+Math.random()*4);
+  }
+  ctx.font = "500 16px Inter, sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.textAlign = 'center';
+  ctx.fillText(currentRef, W/2, barY+90);
+
+  // Bottom marquee
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0,H-90,W,90); ctx.clip();
+  ctx.font = "700 26px Anton, sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  let bx2 = 20;
+  while(bx2 < W+400){
+    ctx.fillText(marqueeTop, bx2, H-45);
+    bx2 += ctx.measureText(marqueeTop).width;
+  }
+  ctx.restore();
+}
+
+function downloadTicket(){
+  const canvas = document.getElementById('ticketCanvas');
+  const link = document.createElement('a');
+  const safeName = (currentGuestName || 'guest').replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+  link.download = 'brand_launch_dinner_ticket_'+safeName+'.jpg';
+  link.href = canvas.toDataURL('image/jpeg', 0.92);
+  link.click();
+}
+
+function toggleAdmin(){
+  const panel = document.getElementById('adminPanel');
+  const showing = panel.style.display === 'block';
+  panel.style.display = showing ? 'none' : 'block';
+  if(!showing) loadAdmin();
+}
+
+async function loadAdmin(){
+  const tbody = document.querySelector('#adminTable tbody');
+  tbody.innerHTML = '<tr><td colspan="4">Loading…</td></tr>';
+  try{
+    const list = await window.storage.list('attendees:', true);
+    if(!list || !list.keys || list.keys.length === 0){
+      tbody.innerHTML = '<tr><td colspan="4">No registrations yet.</td></tr>';
+      return;
+    }
+    const rows = [];
+    for(const key of list.keys){
+      try{
+        const res = await window.storage.get(key, true);
+        if(res && res.value){
+          const d = JSON.parse(res.value);
+          rows.push(d);
+        }
+      }catch(e){}
+    }
+    rows.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    tbody.innerHTML = rows.map(r=>
+      '<tr><td>'+r.name+'</td><td>'+(CONFIG.tickets[r.ticketType]?CONFIG.tickets[r.ticketType].label:r.ticketType)+'</td><td>'+r.email+'</td><td>'+new Date(r.timestamp).toLocaleString()+'</td></tr>'
+    ).join('') || '<tr><td colspan="4">No registrations yet.</td></tr>';
+  }catch(err){
+    tbody.innerHTML = '<tr><td colspan="4">Could not load guest list.</td></tr>';
+  }
+}
+
+updateStepPills(1);
+</script>
+</body>
+</html>
