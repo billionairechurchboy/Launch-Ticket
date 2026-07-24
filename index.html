@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://korablobstorage.blob.core.windows.net/modal-bucket/korapay-collections.min.js"></script>
 <style>
   :root{
     --charcoal:#2B2B2B;
@@ -245,7 +245,7 @@
     <p class="subtitle">You're getting the <b id="payTicketName" style="color:#fff;"></b></p>
 
     <div id="testBanner" class="test-banner" style="display:none;">
-      Test mode: no live Paystack key has been added yet, so payment is simulated. Add your Paystack public key in the CONFIG section of this file to accept real payments.
+      Test mode: no live Kora key has been added yet, so payment is simulated. Add your Kora public key in the CONFIG section of this file to accept real payments.
     </div>
 
     <div class="meta-row">
@@ -294,9 +294,10 @@
 <script>
 /* ============ CONFIG — edit these before going live ============ */
 const CONFIG = {
-  // Replace with your real Paystack PUBLIC key (starts with pk_live_ or pk_test_).
-  // Until you do, the page runs in simulated test mode so you can try the full flow.
-  paystackPublicKey: 'pk_test_REPLACE_WITH_YOUR_KEY',
+  // Your Kora PUBLIC key — safe to use client-side. NEVER put your Kora secret key in this file
+  // or any other front-end code; it must only ever be used from your own server (e.g. to verify
+  // transactions via webhook or a server-side API call).
+  korapayPublicKey: 'pk_live_ULnJsRhx4qgfLZuyJLo6ZMRANo7KJisjZMfst87o',
   eventDate: '16TH AUG 2026',
   eventTime: '1:30 PM',
   countdownTarget: '2026-08-05T00:00:00', // 5th Aug 2026
@@ -343,7 +344,7 @@ function goToPayment(){
   const t = CONFIG.tickets[selectedTicket];
   document.getElementById('payTicketName').textContent = t.label;
   document.getElementById('payAmount').textContent = '₦' + t.price.toLocaleString();
-  const isTestMode = CONFIG.paystackPublicKey.includes('REPLACE_WITH_YOUR_KEY');
+  const isTestMode = CONFIG.korapayPublicKey.includes('REPLACE_WITH_YOUR_KEY');
   document.getElementById('testBanner').style.display = isTestMode ? 'block' : 'none';
   goToStep(2);
 }
@@ -351,10 +352,11 @@ function goToPayment(){
 function startPayment(){
   const t = CONFIG.tickets[selectedTicket];
   currentRef = 'BLD-' + Date.now().toString(36).toUpperCase();
-  // Paystack requires an email on the transaction even though we don't collect one from the guest here;
-  // this placeholder is only used for the payment record, not shown to the guest.
+  // Kora requires a customer name/email on the transaction even though we don't collect one
+  // from the guest at this stage; these placeholders are only used for the payment record,
+  // not shown to the guest. Their real name is collected in the next step for the ticket itself.
   const placeholderEmail = 'guest+' + currentRef.toLowerCase() + '@brandwithab.com';
-  const isTestMode = CONFIG.paystackPublicKey.includes('REPLACE_WITH_YOUR_KEY');
+  const isTestMode = CONFIG.korapayPublicKey.includes('REPLACE_WITH_YOUR_KEY');
 
   if(isTestMode){
     // Simulated success so the flow can be tested before a real key is added.
@@ -362,20 +364,25 @@ function startPayment(){
     return;
   }
 
-  const handler = PaystackPop.setup({
-    key: CONFIG.paystackPublicKey,
-    email: placeholderEmail,
-    amount: t.price * 100, // kobo
+  window.Korapay.initialize({
+    key: CONFIG.korapayPublicKey,
+    reference: currentRef,
+    amount: t.price,
     currency: CONFIG.currency,
-    ref: currentRef,
-    callback: function(response){
-      onPaymentSuccess();
+    customer: {
+      name: 'Event Guest',
+      email: placeholderEmail
     },
     onClose: function(){
-      // user closed the payment popup without paying
+      // guest closed the payment modal without paying
+    },
+    onSuccess: function(data){
+      onPaymentSuccess();
+    },
+    onFailed: function(data){
+      // payment failed — guest stays on the payment step and can try again
     }
   });
-  handler.openIframe();
 }
 
 function onPaymentSuccess(){
